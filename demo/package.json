@@ -1,0 +1,22 @@
+{
+    "name": "demo",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "koa": "latest",
+        "koa-router": "latest"
+    },
+    "devDependencies": {
+        "@bazel/bazelisk": "latest",
+        "@bazel/buildifier": "latest",
+        "@bazel/ibazel": "^0.12.2",
+        "@bazel/typescript": "latest",
+        "@types/koa": "latest",
+        "@types/koa-router": "latest",
+        "typescript": "~3.4.0"
+    },
+    "scripts": {
+        "build": "bazelisk build //...",
+        "test": "bazelisk test //..."
+    }
+}

@@ -1,0 +1,5 @@
+
+demo/dist
+demo/bazel-out
+demo/node_modules
+presentation/node_modules

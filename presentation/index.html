@@ -1,0 +1,303 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>reveal.js</title>
+
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/reveal.css">
+  <link rel="stylesheet" href="css/theme/black.css">
+
+  <!-- Theme used for syntax highlighting of code -->
+  <link rel="stylesheet" href="lib/css/monokai.css">
+
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+    document.getElementsByTagName('head')[0].appendChild(link);
+
+  </script>
+
+  <style>
+    .flexbox {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .left {
+      margin: 10px 0 15px 20px;
+      text-align: left;
+      z-index: -10;
+      width: 35%;
+      font-size: 0.85em;
+      line-height: 1.5;
+    }
+
+    .right {
+      margin: 10px 0 15px 30px;
+      text-align: left;
+      z-index: -10;
+      width: 60%;
+      font-size: 0.85em;
+      line-height: 1.5;
+    }
+
+    .reveal section img {
+      border: none;
+      box-shadow: none;
+      background: none;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section>
+        <div class="flexbox">
+          <div class="left">
+            <img src="tristan.png" alt="" />
+          </div>
+          <div class="right">
+            <h3>Tristan Foureur</h3>
+            <h4>Co-Founder & CTO @ WeMaintain</h4>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2>Découverte de TypeScript</h2>
+        <img src="https://media.giphy.com/media/5VKbvrjxpVJCM/giphy.gif" alt="">
+      </section>
+      <section>
+        <h2>Passage au microservice</h2>
+        <img src="https://dzone.com/storage/temp/11957721-chassis.jpg" alt="">
+      </section>
+      <section>
+        <h2>Flow de build</h2>
+        <img src="ci.png" alt="">
+      </section>
+      <section>
+        <h3>Consolidation dans un monorepo</h3>
+        <img src="https://miro.medium.com/max/800/1*lgWw_inXlHN4dSgn4hxJSg.jpeg" alt="">
+      </section>
+      <section>
+        <img src="https://aurelien-loyer.fr/bazel-bazel-bazel/slides/images/bazel.png" style="background: white; padding: 40px;">
+      </section>
+      <section data-markdown="Slides.md" data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:">
+        <!--
+			   Note that Windows uses `\r\n` instead of `\n` as its linefeed character.
+			   For a regex that supports all operating systems, use `\r?\n` instead of `\n`.
+		   -->
+      </section>
+      <section>
+        <h2>Démo simple</h2>
+        <pre>
+<code class="plaintext" data-line-numbers="3,4,6,7,8|11,5">
+  .
+  ├── apps
+  │   └── server
+  ├── BUILD.bazel
+  ├── libs
+  │   ├── add
+  │   └── subtract
+  ├── package.json
+  ├── tsconfig.json
+  ├── WORKSPACE.bazel
+  └── yarn.lock
+</code>
+</pre>
+      </section>
+      <section>
+        <h2>Structure</h2>
+        <img src="structure.png" alt="">
+      </section>
+      <section>
+        <h2>Fichier WORKSPACE (1/2)</h2>
+        <pre><code class="language-python">
+workspace(
+  name = "demo",
+  managed_directories = {"@npm": ["node_modules"]},
+)
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "build_bazel_rules_nodejs",
+    sha256 = "b6670f9f43faa66e3009488bbd909bc7bc46a5a9661a33f6bc578068d1837f37",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/1.3.0/rules_nodejs-1.3.0.tar.gz"],
+)
+        </code></pre>
+      </section>
+      <section>
+        <h2>WORKSPACE (2/2)</h2>
+        <pre><code class="language-python">
+load("@build_bazel_rules_nodejs//:index.bzl", "yarn_install")
+yarn_install(
+    name = "npm",
+    package_json = "//:package.json",
+    yarn_lock = "//:yarn.lock",
+)
+
+load("@npm//:install_bazel_dependencies.bzl", "install_bazel_dependencies")
+install_bazel_dependencies()
+
+load("@npm_bazel_typescript//:index.bzl", "ts_setup_workspace")
+ts_setup_workspace()
+        </code></pre>
+      </section>
+      <section>
+        <h3>Paquets Bazel</h3>
+        <ul>
+          <li>Est une unité de code dans le Workspace</li>
+          <li>Contient un ou plusieurs fichiers à build ensemble et qui partage des dépendances communes</li>
+          <li>Contient un fichier <code>BUILD</code> qui expose des règles Bazel pour le construire/tester</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Cibles Bazel (targets)</h3>
+        <ul>
+          <li>Dans un fichier <code>BUILD</code> on peut avoir zéro ou plusieurs targets</li>
+          <li>Les targets peuvent être des fichiers ou des règles qui définissent des tâches</li>
+          <li>Une target peut dépendre d'une autre target</li>
+          <li>Les dépendances circulaires sont interdites</li>
+        </ul>
+      </section>
+      <section>
+        <pre>
+<code class="plaintext" data-line-numbers="4,5,10,11,15,16">
+  .
+  ├── apps
+  │   └── server
+  │       ├── BUILD
+  │       ├── index.ts
+  │       └── tsconfig.json
+  ├── BUILD.bazel
+  ├── libs
+  │   ├── add
+  │   │   ├── BUILD
+  │   │   ├── index.ts
+  │   │   ├── package.json
+  │   │   └── tsconfig.json
+  │   └── subtract
+  │       ├── BUILD
+  │       ├── index.ts
+  │       └── package.json
+  ├── package.json
+  ├── tsconfig.json
+  ├── WORKSPACE.bazel
+  └── yarn.lock
+</code>
+</pre>
+      </section>
+      <section>
+        <h3>Fichier BUILD (1/2)</h3>
+        <pre><code class="language-python" data-line-numbers="1-50|3|5|7-11">
+# lib/add/BUILD
+package(default_visibility=["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+
+ts_library(
+    name = "add",
+    module_name = "@demo/add",
+    srcs = ["index.ts"],
+)
+        </code></pre>
+      </section>
+      <section>
+        <h3>Fichier BUILD (2/2)</h3>
+        <pre><code class="language-python" data-line-numbers="1-50|3,4|6-17|19-25">
+# apps/server/BUILD
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
+
+ts_library(
+    name = "server_lib",
+    srcs = glob(
+        ["*.ts"],
+    ),
+    deps = [
+        "@npm//@types/node",
+        "@npm//koa",
+        "@npm//koa-router",
+        "//libs/add"
+    ],
+)
+
+nodejs_binary(
+    name = "server",
+    data = [
+        ":server_lib",
+    ],
+    entry_point = ":index.ts",
+)
+        </code></pre>
+      </section>
+      <section>
+        <h3>Graph de dépendance</h3>
+        <img src="graph.png" alt="">
+      </section>
+      <section>
+        <h3>Aller plus loin</h3> 
+        <ul>
+          <li>Slack de Bazel : bazelbuild.slack.com</li>
+          <li>Cache partagé</li>
+          <li>Remote build execution</li>
+          <li><code>ibazel</code> pour watch le code</li>
+          <li>Gestion des dépendances transitives</li>
+        </ul>
+      </section>
+      <section>
+        <h3>En conclusion</h3> 
+        <ul>
+          <li>Passer sur Bazel : long et douloureux... mais en vaut la peine !</li>
+          <li>Temps de pipeline ramené à 3-5minutes comparé à 2x 45 minutes</li>
+          <li>Faîtes-vous accompagner si vous portez une codebase importante</li>
+          <li>Encore certaines petites choses instables (Jest)</li>
+        </ul>
+      </section>
+      <section>
+        <h3>La minute de pub !</h3>
+        <img src="https://realestech.eu/wp-content/uploads/2018/08/WeMaintain-logo-768x200.png" alt="" style="background: white; padding: 30px">
+      </section>
+      <section><h1>Questions ?</h1></section>
+    </div>
+  </div>
+
+  <script src="js/reveal.js"></script>
+
+  <script>
+    // More info about config & dependencies:
+    // - https://github.com/hakimel/reveal.js#configuration
+    // - https://github.com/hakimel/reveal.js#dependencies
+    Reveal.initialize({
+      hash: true,
+      width: '70%',
+      height: '100%',
+      dependencies: [{
+          src: 'plugin/markdown/marked.js'
+        },
+        {
+          src: 'plugin/markdown/markdown.js'
+        },
+        {
+          src: 'plugin/highlight/highlight.js'
+        },
+        {
+          src: 'plugin/notes/notes.js',
+          async: true
+        }
+      ]
+    });
+
+  </script>
+</body>
+
+</html>
